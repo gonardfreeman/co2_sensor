@@ -12,6 +12,7 @@ use microbit_bsp::embassy_nrf::{
     bind_interrupts,
     peripherals::{P0_26, P1_00, TWISPI0},
     twim::{self, Twim},
+    Peri,
 };
 use panic_probe as _;
 
@@ -23,11 +24,17 @@ pub fn get_receiver() -> Option<DynReceiver<'static, u16>> {
 }
 
 #[embassy_executor::task]
-pub async fn sensor_task(twi: TWISPI0, sda: P1_00, scl: P0_26) {
+pub async fn sensor_task(
+    twi: Peri<'static, TWISPI0>,
+    sda: Peri<'static, P1_00>,
+    scl: Peri<'static, P0_26>,
+) {
     bind_interrupts!(struct Irqs {
         TWISPI0 => twim::InterruptHandler<TWISPI0>;
     });
-    let i2c: Twim<'_, TWISPI0> = Twim::new(twi, Irqs, sda, scl, Default::default());
+    let mut ram_buffer = [0u8, 16];
+    let i2c: Twim<'_, TWISPI0> =
+        Twim::new(twi, Irqs, sda, scl, Default::default(), &mut ram_buffer);
     let mut scd = Scd4x::new(i2c, Delay);
 
     Timer::after_millis(30).await;

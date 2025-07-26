@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 cargo-embed = "1.0.1"
 cargo-flash = "1.0.1"
-cortex-m = { version="0.7.0", features=["critical-section-single-core"] }
+cortex-m = { version="0.7.7" }
 cortex-m-rt = "0.7.5"
 defmt = "1.0.1"
 defmt-rtt = "1.0.0"
@@ -18,10 +18,19 @@ embassy-executor = {version = "0.7.0", features = [
 embassy-time = { version = "0.4.0", features = ["defmt", "defmt-timestamp-uptime"] }
 libscd = { version = "0.5.1", features = ["scd4x", "async", "defmt"] }
 panic-probe = { version = "1.0.0", features = ["print-defmt"] }
-microbit-bsp = { version = "0.4.0" }
+microbit-bsp = { version = "0.4.0", features = ["trouble"] }
 embassy-sync = { version = "0.7.0", features = ["defmt"] }
 heapless = { version = "0.8.0", features = ["defmt-03"] }
 embassy-futures = { version = "0.1.1", features = ["defmt"] }
+trouble-host = { version = "0.2.4", features = ["defmt"] }
 
 [patch.crates-io]
-microbit-bsp = { git = "https://github.com/lulf/microbit-bsp.git", rev = "9c7d52e21de9ff03f8957faa2eb4d76e4497b05c"}
+microbit-bsp = { git = "https://github.com/lulf/microbit-bsp.git", rev = "b5792b70c663377b85c11359ad430f10582e81ff"}
+
+embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
+embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
+embassy-futures = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
+embassy-nrf = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
+embassy-sync = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
+embassy-time = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
+embassy-time-driver = { git = "https://github.com/embassy-rs/embassy.git", rev = "996974e313fa5ec2c7c2d9dd0998fab244c0a180"}
