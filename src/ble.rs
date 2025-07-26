@@ -27,6 +27,6 @@ pub async fn run(
     spawner: Spawner,
 ) {
     spawner.must_spawn(mpsl_task(mpsl));
-
+    // random static addr
     let address: Address = Address::random([0xff, 0x8f, 0x1a, 0x05, 0xe4, 0xff]);
 }
