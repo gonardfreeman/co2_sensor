@@ -15,8 +15,9 @@ use microbit_bsp::embassy_nrf::{
     Peri,
 };
 use panic_probe as _;
+use static_cell::ConstStaticCell;
 
-const SENSOR_DATA_CONSUMERS: usize = 1;
+const SENSOR_DATA_CONSUMERS: usize = 2;
 static SENSOR_DATA: Watch<ThreadModeRawMutex, u16, SENSOR_DATA_CONSUMERS> = Watch::new();
 
 pub fn get_receiver() -> Option<DynReceiver<'static, u16>> {
@@ -29,12 +30,12 @@ pub async fn sensor_task(
     sda: Peri<'static, P1_00>,
     scl: Peri<'static, P0_26>,
 ) {
+    static RAM_BUFFER: ConstStaticCell<[u8; 4]> = ConstStaticCell::new([0; 4]);
     bind_interrupts!(struct Irqs {
         TWISPI0 => twim::InterruptHandler<TWISPI0>;
     });
-    let mut ram_buffer = [0u8, 16];
     let i2c: Twim<'_, TWISPI0> =
-        Twim::new(twi, Irqs, sda, scl, Default::default(), &mut ram_buffer);
+        Twim::new(twi, Irqs, sda, scl, Default::default(), RAM_BUFFER.take());
     let mut scd = Scd4x::new(i2c, Delay);
 
     Timer::after_millis(30).await;

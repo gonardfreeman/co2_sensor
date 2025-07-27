@@ -23,6 +23,7 @@ embassy-sync = { version = "0.7.0", features = ["defmt"] }
 heapless = { version = "0.8.0", features = ["defmt-03"] }
 embassy-futures = { version = "0.1.1", features = ["defmt"] }
 trouble-host = { version = "0.2.4", features = ["defmt"] }
+static_cell = "2.1.1"
 
 [patch.crates-io]
 microbit-bsp = { git = "https://github.com/lulf/microbit-bsp.git", rev = "b5792b70c663377b85c11359ad430f10582e81ff"}
