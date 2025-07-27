@@ -16,7 +16,7 @@ const TCS_FW_VERSION: ThingyUuid = ThingyUuid(0x0107);
 const TCS_MTU: ThingyUuid = ThingyUuid(0x0108);
 const TCS_NFC: ThingyUuid = ThingyUuid(0x0109);
 
-pub const BLE_NAME: &str = "co2_sensor";
+pub const BLE_NAME: &str = "co2_sens";
 pub const MSP_NORDIC_COMPANY_ID: u16 = 0x0059;
 pub const MSP_PAYLOAD: [u8; 4] = [0x01, 0x02, 0x03, 0x04];
 

@@ -17,11 +17,32 @@ use microbit_bsp::embassy_nrf::{
 use panic_probe as _;
 use static_cell::ConstStaticCell;
 
+#[derive(Clone, Copy)]
+pub struct AllSensorsData {
+    pub co2: u16,
+    pub int: i8,
+    pub dec: u8,
+    pub hum: u8,
+}
+
+impl AllSensorsData {
+    pub const fn new(co2: u16, int: i8, dec: u8, hum: u8) -> Self {
+        Self { co2, int, dec, hum }
+    }
+}
+
 const SENSOR_DATA_CONSUMERS: usize = 2;
+const ALL_SENSORS_CONSUMERS: usize = 1;
 static SENSOR_DATA: Watch<ThreadModeRawMutex, u16, SENSOR_DATA_CONSUMERS> = Watch::new();
+static ALL_SENSONSORS: Watch<ThreadModeRawMutex, AllSensorsData, ALL_SENSORS_CONSUMERS> =
+    Watch::new();
 
 pub fn get_receiver() -> Option<DynReceiver<'static, u16>> {
     SENSOR_DATA.dyn_receiver()
+}
+
+pub fn get_all_receivers() -> Option<DynReceiver<'static, AllSensorsData>> {
+    ALL_SENSONSORS.dyn_receiver()
 }
 
 #[embassy_executor::task]
@@ -49,6 +70,7 @@ pub async fn sensor_task(
     }
     let mut rx = get_show_receiver().unwrap();
     let tx = SENSOR_DATA.sender();
+    let all_tx = ALL_SENSONSORS.sender();
 
     loop {
         if scd.data_ready().await.unwrap() {
@@ -60,6 +82,13 @@ pub async fn sensor_task(
                 ShowSensorData::Humidity => tx.send(m.humidity as u16),
                 ShowSensorData::CO2 => tx.send(m.co2 as u16),
             }
+            let all_sensor_data = AllSensorsData::new(
+                m.co2,
+                m.temperature as i8,
+                m.temperature as u8,
+                m.humidity as u8,
+            );
+            all_tx.send(all_sensor_data);
             info!(
                 "CO2: {}, Humidity: {}, Temperature: {}",
                 m.co2 as u16, m.humidity as u16, m.temperature as u16

@@ -53,11 +53,30 @@ async fn host_task(mut runner: Runner<'static, SoftdeviceController<'static>, De
 
 async fn env_notifier(conn: &GattConnection<'_, '_, DefaultPacketPool>, server: &Server<'_>) {
     let gas = &server.env.gas;
-    let mut rx = co_sensor::get_receiver().unwrap();
+    let temp = &server.env.temperature;
+    let hum = &server.env.humidity;
+    // let mut rx = co_sensor::get_receiver().unwrap();
+    let mut all_rx = co_sensor::get_all_receivers().unwrap();
     loop {
-        let co2 = rx.changed().await;
-        if let Err(e) = gas.notify(conn, &TesGas::new(co2)).await {
-            warn!("[gatt] notification error: {}", e);
+        let all_readings = all_rx.changed().await;
+        info!("[gatt-read] co2: {}", all_readings.co2);
+        if let Err(e_co2) = gas.notify(conn, &TesGas::new(all_readings.co2)).await {
+            warn!("[gatt-notif] co2: {}", e_co2);
+        }
+        info!("[gatt-read] int: {}", all_readings.int);
+        info!("[gatt-read] dec: {}", all_readings.dec);
+        if let Err(e_t) = temp
+            .notify(
+                conn,
+                &TesTemperature::new(all_readings.int, all_readings.dec),
+            )
+            .await
+        {
+            warn!("[gatt-notif] temp: {}", e_t);
+        };
+        info!("[gatt-read] hum: {}", all_readings.hum);
+        if let Err(e_h) = hum.notify(conn, &all_readings.hum).await {
+            warn!("[gatt-notif] hum: {}", e_h);
         }
     }
 }

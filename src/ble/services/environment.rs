@@ -18,6 +18,10 @@ pub const TES_CONFIG: ThingyUuid = ThingyUuid(0x0206);
 pub struct ThingyEnvironmentService {
     #[characteristic(uuid = TES_GAS, notify)]
     pub gas: TesGas,
+    #[characteristic(uuid = TES_HUMIDITY, notify)]
+    pub humidity: TesHumidity,
+    #[characteristic(uuid = TES_TEMPERATURE, notify)]
+    pub temperature: TesTemperature,
 }
 
 #[repr(C, packed)]
@@ -45,7 +49,18 @@ pub struct TesTemperature {
     decimal: u8,
 }
 
+impl TesTemperature {
+    pub const fn new(int: i8, dec: u8) -> Self {
+        Self {
+            integer: 20,
+            decimal: 20,
+        }
+    }
+}
+
 impl_fixedgattvalue!(TesTemperature);
+
+pub type TesHumidity = u8;
 
 #[repr(C, packed)]
 #[derive(Default, Clone, Copy)]
