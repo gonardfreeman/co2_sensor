@@ -12,22 +12,51 @@ use microbit_bsp::embassy_nrf::{
     bind_interrupts,
     peripherals::{P0_26, P1_00, TWISPI0},
     twim::{self, Twim},
+    Peri,
 };
 use panic_probe as _;
+use static_cell::ConstStaticCell;
 
-const SENSOR_DATA_CONSUMERS: usize = 1;
+#[derive(Clone, Copy)]
+pub struct AllSensorsData {
+    pub co2: u16,
+    pub int: i8,
+    pub dec: u8,
+    pub hum: u8,
+}
+
+impl AllSensorsData {
+    pub const fn new(co2: u16, int: i8, dec: u8, hum: u8) -> Self {
+        Self { co2, int, dec, hum }
+    }
+}
+
+const SENSOR_DATA_CONSUMERS: usize = 2;
+const ALL_SENSORS_CONSUMERS: usize = 1;
 static SENSOR_DATA: Watch<ThreadModeRawMutex, u16, SENSOR_DATA_CONSUMERS> = Watch::new();
+static ALL_SENSONSORS: Watch<ThreadModeRawMutex, AllSensorsData, ALL_SENSORS_CONSUMERS> =
+    Watch::new();
 
 pub fn get_receiver() -> Option<DynReceiver<'static, u16>> {
     SENSOR_DATA.dyn_receiver()
 }
 
+pub fn get_all_receivers() -> Option<DynReceiver<'static, AllSensorsData>> {
+    ALL_SENSONSORS.dyn_receiver()
+}
+
 #[embassy_executor::task]
-pub async fn sensor_task(twi: TWISPI0, sda: P1_00, scl: P0_26) {
+pub async fn sensor_task(
+    twi: Peri<'static, TWISPI0>,
+    sda: Peri<'static, P1_00>,
+    scl: Peri<'static, P0_26>,
+) {
+    static RAM_BUFFER: ConstStaticCell<[u8; 4]> = ConstStaticCell::new([0; 4]);
     bind_interrupts!(struct Irqs {
         TWISPI0 => twim::InterruptHandler<TWISPI0>;
     });
-    let i2c: Twim<'_, TWISPI0> = Twim::new(twi, Irqs, sda, scl, Default::default());
+    let i2c: Twim<'_, TWISPI0> =
+        Twim::new(twi, Irqs, sda, scl, Default::default(), RAM_BUFFER.take());
     let mut scd = Scd4x::new(i2c, Delay);
 
     Timer::after_millis(30).await;
@@ -41,6 +70,7 @@ pub async fn sensor_task(twi: TWISPI0, sda: P1_00, scl: P0_26) {
     }
     let mut rx = get_show_receiver().unwrap();
     let tx = SENSOR_DATA.sender();
+    let all_tx = ALL_SENSONSORS.sender();
 
     loop {
         if scd.data_ready().await.unwrap() {
@@ -52,6 +82,13 @@ pub async fn sensor_task(twi: TWISPI0, sda: P1_00, scl: P0_26) {
                 ShowSensorData::Humidity => tx.send(m.humidity as u16),
                 ShowSensorData::CO2 => tx.send(m.co2 as u16),
             }
+            let all_sensor_data = AllSensorsData::new(
+                m.co2,
+                m.temperature as i8,
+                m.temperature as u8,
+                m.humidity as u8,
+            );
+            all_tx.send(all_sensor_data);
             info!(
                 "CO2: {}, Humidity: {}, Temperature: {}",
                 m.co2 as u16, m.humidity as u16, m.temperature as u16
