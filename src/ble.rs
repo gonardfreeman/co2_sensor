@@ -88,7 +88,7 @@ pub async fn run(
 ) {
     spawner.must_spawn(mpsl_task(mpsl));
     // random static addr
-    let address: Address = Address::random([0xff, 0x8f, 0x1a, 0x05, 0xe4, 0xff]);
+    let address: Address = Address::random([0xff, 0x8f, 0x1c, 0x05, 0xe4, 0xff]);
     let resources = {
         static RESOURCES: StaticCell<BleHostResources> = StaticCell::new();
         RESOURCES.init(BleHostResources::new())

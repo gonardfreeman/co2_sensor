@@ -1,3 +1,4 @@
+use defmt::info;
 use trouble_host::prelude::Uuid;
 
 pub mod battery;
